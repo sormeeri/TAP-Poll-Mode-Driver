@@ -126,8 +126,8 @@ tcpreplay -i tap0 --loop=10000 ./real_traffic.pcap
 ```
 becarfull that pcapfile exsist in tcpreplay forder or get directory to run pcapfile before run tcpteplay we open wireshark in new terminal and capture tap1 to see packet that transfer from tap0 
 
-![tcpreply(tcpreply.png)
+![tcpreplay](tcpreplay.png)
 
-![wireshark(wireshark.png)
+![wireshark](wireshark.png)
 
 
