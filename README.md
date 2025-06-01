@@ -73,3 +73,13 @@ Here is what the terminal should look like:
 
 then with show port stats all you can see the port stats
 ![showport](showport.png)
+
+next step to add new queue in tap mode we should do this step in test pmd
+first stop all port and create new rx and tx with below code and start again
+```shell
+port stop all
+
+port config all rxq 2
+
+port config all txq 2
+```
