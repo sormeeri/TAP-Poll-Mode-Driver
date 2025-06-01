@@ -69,3 +69,7 @@ to run testpmd
 ***LD_PRELOAD=/usr/lib/x86_64-linux-gnu/liblttng-ust-cyg-profile.so forces the DPDK application to load LTTng's function tracing library first, enabling detailed profiling of function calls for performance analysis. This allows tracking exact timing and frequency of every function call in DPDK (like packet processing functions) to identify bottlenecks.
 
 Here is what the terminal should look like:
+![testpmd](testpmd1.png)
+
+then with show port stats all you can see the port stats
+![showport](showport.png)
