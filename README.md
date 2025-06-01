@@ -83,3 +83,6 @@ port config all rxq 2
 
 port config all txq 2
 ```
+Here is what the terminal should look like:
+![new-rx-tx](new-rx-tx.png)
+![showportall](showportall.png)
