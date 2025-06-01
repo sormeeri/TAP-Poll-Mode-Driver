@@ -85,4 +85,7 @@ port config all txq 2
 ```
 Here is what the terminal should look like:
 ![new-rx-tx](new-rx-tx.png)
+then after create second rx and tx we can see 
 ![showallport](showallport.png)
+
+then we should clone tcpreply from this source to do our project (https://github.com/appneta/tcpreplay/releases/tag/v4.5.1)
