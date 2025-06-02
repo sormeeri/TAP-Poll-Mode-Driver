@@ -48,7 +48,7 @@ echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
 mkdir /mnt/huge
 mount -t hugetlbfs pagesize=1GB /mnt/huge
 ```
-#to create two TAP interfaces for DPDK's TAP Poll Mode Driver (PMD)
+# create two TAP interfaces for DPDK's TAP Poll Mode Driver (PMD)
 
 in directory cd dpdk-24.03/build
 to run testpmd
@@ -69,65 +69,36 @@ to run testpmd
 ***LD_PRELOAD=/usr/lib/x86_64-linux-gnu/liblttng-ust-cyg-profile.so forces the DPDK application to load LTTng's function tracing library first, enabling detailed profiling of function calls for performance analysis. This allows tracking exact timing and frequency of every function call in DPDK (like packet processing functions) to identify bottlenecks.
 
 Here is what the terminal should look like:
+
 ![testpmd](testpmd1.png)
 
 then with show port stats all you can see the port stats
 ![showport](showport.png)
 
-next step to add new queue in tap mode we should do this step in test pmd
-first stop all port and create new rx and tx with below code and start again
-```shell
-port stop all
 
-port config all rxq 2
+### Setting Up an LTTng Trace Session
+  In order to Automate the LTTng capture, create a shell script to configure the LTTng session. The script initializes the session, adds the necessary context fields, starts tracing, sleeps for a specified duration, and then stops and destroys the session.
 
-port config all txq 2
+
+
+
+        ```shell
+        touch script.sh
+        chmod +x script.sh
+        nano script.sh
+        ```
+      Paste the following commands into the file:
+      
+      ```shell
+#!/bin/bash
+
+lttng create libpcap55
+lttng enable-channel --userspace --num-subbuf=4 --subbuf-size=40M channel0
+#lttng enable-channel --userspace channel0
+lttng enable-event --channel channel0 --userspace --all
+lttng add-context --channel channel0 --userspace --type=vpid --type=vtid --type=procname
+lttng start
+sleep 2
+lttng stop
+lttng destroy
 ```
-Here is what the terminal should look like:
-![new-rx-tx](new-rx-tx.png)
-
-then after create second rx and tx we can see 
-
-
-![showallport](showallport.png)
-
-
-then we should clone tcpreply from this source to do our project [official website](https://github.com/appneta/tcpreplay/releases/tag/v4.5.1)
-after download tcpreplay-4.5.1.tar.gz and install it we open it in new terminall then in same terminal wirite below code
-
-```shell
- ./configure --disable-tuntap
-make
-sudo make install
-```
-
-<br>
-
-**Why This Approach?**
-
-<br>**Avoids Conflicts**
-project uses DPDK's high-performance TAP PMD
-Disabling tcpreplay's built-in TUN/TAP prevents driver/functionality clashes
-
-<br>**Optimized Setup**
-Removes redundant TAP code → smaller, faster binary
-Maintains clean separation: DPDK handles TAP, tcpreplay handles packet replayStability
-Official v4.5.1 source ensures compatibility with modern systems
-Bypasses outdated/incomplete OS package versions
-
-khnow before put the pcap file in tcpreply we do filter flow in udp or tcp in testpmd 
-```shell
-flow create 0 ingress pattern eth / ipv4 / udp / end actions queue index 0 / end
-```
-then active tcpleply for pcapfile like below
-
-```shell
-tcpreplay -i tap0 --loop=10000 ./real_traffic.pcap
-```
-becarfull that pcapfile exsist in tcpreplay forder or get directory to run pcapfile before run tcpteplay we open wireshark in new terminal and capture tap1 to see packet that transfer from tap0 
-
-![tcpreplay](tcpreplay.png)
-
-![wireshark](wireshark.png)
-
-
