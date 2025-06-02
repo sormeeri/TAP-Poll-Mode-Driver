@@ -89,9 +89,9 @@ then with show port stats all you can see the port stats
         ```
       Paste the following commands into the file:
       
-      ```shell
+ 
 #!/bin/bash
-
+   ```shell
 lttng create libpcap55
 lttng enable-channel --userspace --num-subbuf=4 --subbuf-size=40M channel0
 #lttng enable-channel --userspace channel0
@@ -101,4 +101,4 @@ lttng start
 sleep 2
 lttng stop
 lttng destroy
-```
+ ```
