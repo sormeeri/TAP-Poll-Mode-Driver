@@ -48,6 +48,7 @@ echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
 mkdir /mnt/huge
 mount -t hugetlbfs pagesize=1GB /mnt/huge
 ```
+
 # create two TAP interfaces for DPDK's TAP Poll Mode Driver (PMD)
 
 in directory cd dpdk-24.03/build
@@ -77,9 +78,11 @@ then with show port stats all you can see the port stats
 
 
 # create another queue rx/tx
-tIn the next step, to add a new queue in TAP mode, we need to perform the following actions in testpmd: first, stop all ports, then create new RX and TX queues using the code below, and finally start the ports again.
+tIn the next step, to add a new queue in TAP mode, we need to perform the following actions in testpmd: 
+first, stop all ports, then create new RX and TX queues using the code below, and finally start the ports again.
+[newtx-rx](newtx-rx.png)
 then, after creating the second RX and TX queues, we can observe the results.
-[showportall](showportall.png)
+[showallport](showallport.png)
 
 ## create filter on testpmd
 
@@ -89,8 +92,8 @@ flow create 0 ingress pattern eth / ipv4 / udp / end actions queue index 0 / end
 note:This command installs a flow rule on port 0 that matches Ethernet + IPv4 + UDP packets and sends them to queue 0.
 
 # run tcp replay 
-first download tcpleplay from github source https://github.com/appneta/tcpreplay/releases/tag/v4.5.1
-then extract the file and run it and the same terminal type the following command
+Then, we should clone tcpreplay from the https://github.com/appneta/tcpreplay/releases/tag/v4.5.1 to use it in our project.
+After downloading tcpreplay-4.5.1.tar.gz and installing it, we open a new terminal and run the following code in the same terminal.
 ```shell
 ./configure --disable-tuntap
 make
