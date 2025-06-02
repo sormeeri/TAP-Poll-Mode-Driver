@@ -80,9 +80,9 @@ then with show port stats all you can see the port stats
 # create another queue rx/tx
 tIn the next step, to add a new queue in TAP mode, we need to perform the following actions in testpmd: 
 first, stop all ports, then create new RX and TX queues using the code below, and finally start the ports again.
-[newtx-rx](newtx-rx.png)
+![new-rx-tx](new-rx-tx.png)
 then, after creating the second RX and TX queues, we can observe the results.
-[showallport](showallport.png)
+![showallport](showallport.png)
 
 ## create filter on testpmd
 
