@@ -75,6 +75,11 @@ Here is what the terminal should look like:
 then with show port stats all you can see the port stats
 ![showport](showport.png)
 
+## create filter on testpmd 
+```shell
+flow create 0 ingress pattern eth / ipv4 / udp / end actions queue index 0 / end
+```
+note:This command installs a flow rule on port 0 that matches Ethernet + IPv4 + UDP packets and sends them to queue 0.
 
 ### Setting Up an LTTng Trace Session
   In order to Automate the LTTng capture, create a shell script to configure the LTTng session. The script initializes the session, adds the necessary context fields, starts tracing, sleeps for a specified duration, and then stops and destroys the session.
@@ -92,7 +97,7 @@ then with show port stats all you can see the port stats
  
 #!/bin/bash
    ```shell
-lttng create libpcap55
+lttng create libpcap
 lttng enable-channel --userspace --num-subbuf=4 --subbuf-size=40M channel0
 #lttng enable-channel --userspace channel0
 lttng enable-event --channel channel0 --userspace --all
