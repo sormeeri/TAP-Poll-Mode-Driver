@@ -1,7 +1,7 @@
 # TAP-Poll-Mode-Driver
 This project is designed to analyze network performance using DPDK (testpmd), virtual TAP interfaces, and the tcpreplay tool. Below is the structured workflow for implementation and analysis:
 
-## Installing and Building DPDK from Source with Function Tracing Support
+## 1.Installing and Building DPDK from Source with Function Tracing Support
 1. **Download the Latest DPDK Version**
   
     Retrieve the latest release from the [official DPDK website](https://core.dpdk.org/download/)
@@ -41,7 +41,7 @@ This project is designed to analyze network performance using DPDK (testpmd), vi
   The compiled binaries will be located in the /build/app directory.
 
   <br>
-  # configure hugepage and mount 1GB pagesize
+  ## 2.configure hugepage and mount 1GB pagesize
 
 ```shell
 echo 1024 > /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages
@@ -49,10 +49,9 @@ mkdir /mnt/huge
 mount -t hugetlbfs pagesize=1GB /mnt/huge
 ```
 
-## create two TAP interfaces for DPDK's TAP Poll Mode Driver (PMD)
+## 3.create two TAP interfaces for DPDK's TAP Poll Mode Driver (PMD)
 
-in directory cd dpdk-24.03/build
-to run testpmd
+In the directory cd dpdk-24.03/build, run testpmd as follows:
 
 ```shell
  sudo LD_PRELOAD=/usr/lib/x86_64-linux-gnu/liblttng-ust-cyg-profile.so ./app/dpdk-testpmd -l 0-1 --proc-type=primary --file-prefix=pmd1 --vdev=net_memif,role=server -- -i
@@ -77,7 +76,7 @@ then with show port stats all you can see the port stats
 ![showport](showport.png)
 
 
-# create another queue rx/tx
+## 4. Create Additional RX/TX Queues
 tIn the next step, to add a new queue in TAP mode, we need to perform the following actions in testpmd: 
 first, stop all ports, then create new RX and TX queues using the code below, and finally start the ports again.
 
@@ -87,16 +86,16 @@ then, after creating the second RX and TX queues, we can observe the results.
 
 ![showallport](showallport.png)
 
-## create filter on testpmd
+## 5. Create Flow Filtering Rule in testpmd
 
 ```shell
 flow create 0 ingress pattern eth / ipv4 / udp / end actions queue index 0 / end
 ```
 note:This command installs a flow rule on port 0 that matches Ethernet + IPv4 + UDP packets and sends them to queue 0.
 
-# run tcp replay 
+## 6. Install and Run tcpreplay
 Then, we should clone tcpreplay from the https://github.com/appneta/tcpreplay/releases/tag/v4.5.1 to use it in our project.
-After downloading tcpreplay-4.5.1.tar.gz and installing it, we open a new terminal and run the following code in the same terminal.
+After downloading tcpreplay-4.5.1.tar.gz compile and install it, we open a new terminal and run the following code in the same terminal.
 ```shell
 ./configure --disable-tuntap
 make
@@ -110,7 +109,7 @@ tcpreplay -i tap0 --loop=1000 ./real_traffic.pcap
 
 
 
-### Setting Up an LTTng Trace Session
+### 7. Setting Up an LTTng Trace Session
   In order to Automate the LTTng capture, create a shell script to configure the LTTng session. The script initializes the session, adds the necessary context fields, starts tracing, sleeps for a specified duration, and then stops and destroys the session.
 
 
