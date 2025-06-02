@@ -49,7 +49,7 @@ mkdir /mnt/huge
 mount -t hugetlbfs pagesize=1GB /mnt/huge
 ```
 
-# create two TAP interfaces for DPDK's TAP Poll Mode Driver (PMD)
+## create two TAP interfaces for DPDK's TAP Poll Mode Driver (PMD)
 
 in directory cd dpdk-24.03/build
 to run testpmd
@@ -80,8 +80,11 @@ then with show port stats all you can see the port stats
 # create another queue rx/tx
 tIn the next step, to add a new queue in TAP mode, we need to perform the following actions in testpmd: 
 first, stop all ports, then create new RX and TX queues using the code below, and finally start the ports again.
+
 ![new-rx-tx](new-rx-tx.png)
+
 then, after creating the second RX and TX queues, we can observe the results.
+
 ![showallport](showallport.png)
 
 ## create filter on testpmd
