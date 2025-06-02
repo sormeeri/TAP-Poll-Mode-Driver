@@ -75,11 +75,34 @@ Here is what the terminal should look like:
 then with show port stats all you can see the port stats
 ![showport](showport.png)
 
-## create filter on testpmd 
+
+# create another queue rx/tx
+tIn the next step, to add a new queue in TAP mode, we need to perform the following actions in testpmd: first, stop all ports, then create new RX and TX queues using the code below, and finally start the ports again.
+then, after creating the second RX and TX queues, we can observe the results.
+[showportall](showportall.png)
+
+## create filter on testpmd
+
 ```shell
 flow create 0 ingress pattern eth / ipv4 / udp / end actions queue index 0 / end
 ```
 note:This command installs a flow rule on port 0 that matches Ethernet + IPv4 + UDP packets and sends them to queue 0.
+
+# run tcp replay 
+first download tcpleplay from github source https://github.com/appneta/tcpreplay/releases/tag/v4.5.1
+then extract the file and run it and the same terminal type the following command
+```shell
+./configure --disable-tuntap
+make
+sudo make install
+```
+after that we  can run pcapfile that before create it by below command
+
+```shell
+tcpreplay -i tap0 --loop=1000 ./real_traffic.pcap 
+```
+
+
 
 ### Setting Up an LTTng Trace Session
   In order to Automate the LTTng capture, create a shell script to configure the LTTng session. The script initializes the session, adds the necessary context fields, starts tracing, sleeps for a specified duration, and then stops and destroys the session.
