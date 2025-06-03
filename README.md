@@ -139,7 +139,7 @@ lttng destroy
 
 
 
-# 1  Full analysis
+# 1  Tracing Analysis - UDP Filtering
 
 ---
 
@@ -150,6 +150,8 @@ Because the rule requires classification of every frame’s L3/L4 headers to dec
 > ▸ _The flame-graph slice covering **42 – 54 µs** on the timeline displays a wide orange frame (`pkt_burst_io_forward`) with a dense stack of six short helper functions repeated for each packet, clearly indicating execution inside the burst Rx/Tx loop._
 
 ---
+
+![Event-Density0](Event-Density0.png)
 
 ## 1   What the trace indicates
 
@@ -163,6 +165,8 @@ Because the rule requires classification of every frame’s L3/L4 headers to dec
 > ▸ _Red rows in the *Statistics* table correspond to functions highlighted after drawing a region in the Event-Density view; the same helper symbols dominate both, corroborating the conclusion that classification logic is responsible for burst-time spikes._
 
 ---
+
+![Statistics2](Statistics2.png)
 
 ## 2   Location of the hot-path code in **DPDK 25.03**
 
@@ -189,7 +193,13 @@ Because the rule requires classification of every frame’s L3/L4 headers to dec
 
 ---
 
+![Flame-Graph02](Flame-Graph02.png)
+
+
 ## 4   Bottleneck ranking
+
+![Flame-Graph01](Flame-Graph01.png)
+
 
 | Rank | Dominant cost | Trace symptom | Source location |
 |------|---------------|---------------|-----------------|
@@ -242,7 +252,7 @@ drivers/net/tap/tap_flow.c    : software flow helpers
 
 ---
 
-# 3  Forecast when adding PMU contexts
+# 3 Adding PMU contexts
 
 | PMU counter | Projected change with the flow rule active | Explanation |
 |-------------|--------------------------------------------|-------------|
