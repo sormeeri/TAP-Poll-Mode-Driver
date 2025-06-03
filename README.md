@@ -155,12 +155,12 @@ Because the rule requires classification of every frame’s L3/L4 headers to dec
 
 ## 1   What the trace indicates
 
-| Metric | Dominant functions | Evidence within TraceCompass |
-|--------|--------------------|------------------------------|
-| **Call count** | `pmd_rx_burst` (768 k) → `rte_net_get_ptype` (1 881) → helper chain (`rte_pktmbuf_read`, `rte_constant_bswap16`, `rte_ipv4_hdr_len`, `ptype_l3_ip`, `ptype_l4`, …) | *Descriptive-Statistics* and *Function-Duration-Statistics* views |
-| **Self-time**  | `pmd_rx_burst` ≈ 156 ms of 203 ms | Tooltip in the Flame-Graph |
-| **Event-density peaks** | Peaks dominated by the above helpers (highlighted in red in the *Call-graph Analysis* table) | Event-Density view in combination with the *Statistics* table |
-| **Weighted call tree** | Six PTYPE helpers account for ≈ 60 % of weighted wall-time | *Weighted Tree Viewer* |
+| Metric                  | Dominant functions                                                                                                                                                 | Evidence within TraceCompass                                      |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| **Call count**          | `pmd_rx_burst` (768 k) → `rte_net_get_ptype` (1 881) → helper chain (`rte_pktmbuf_read`, `rte_constant_bswap16`, `rte_ipv4_hdr_len`, `ptype_l3_ip`, `ptype_l4`, …) | *Descriptive-Statistics* and *Function-Duration-Statistics* views |
+| **Self-time**           | `pmd_rx_burst` ≈ 156 ms of 203 ms                                                                                                                                  | Tooltip in the Flame-Graph                                        |
+| **Event-density peaks** | Peaks dominated by the above helpers (highlighted in red in the *Call-graph Analysis* table)                                                                       | Event-Density view in combination with the *Statistics* table     |
+| **Weighted call tree**  | Six PTYPE helpers account for ≈ 60 % of weighted wall-time                                                                                                         | *Weighted Tree Viewer*                                            |
 
 > ▸ _Red rows in the *Statistics* table correspond to functions highlighted after drawing a region in the Event-Density view; the same helper symbols dominate both, corroborating the conclusion that classification logic is responsible for burst-time spikes._
 
@@ -170,14 +170,14 @@ Because the rule requires classification of every frame’s L3/L4 headers to dec
 
 ## 2   Location of the hot-path code in **DPDK 25.03**
 
-| File | Function | Role in the hot path |
-|------|----------|----------------------|
-| **`lib/net/rte_net.c`** | `uint32_t rte_net_get_ptype(...)` | Linear walk over L2/L3/L4 headers (≈ lines 560 – 850). |
-| `lib/net/rte_ip.h` | `rte_ipv4_hdr_len(...)` | Extracts IPv4 IHL on each IPv4 packet. |
-| `lib/net/rte_byteorder.h` | `rte_constant_bswap16(...)` | Endian swap used in every UDP/TCP port check. |
-| `lib/mbuf/rte_mbuf.c` | `rte_pktmbuf_read(...)` | Safely copies header bytes into cache. |
-| **`drivers/net/tap/rte_eth_tap.c`** | `tap_trigger_cb()` → `tap_parse_packet()` → `rte_net_get_ptype()` | TAP Rx path; the callback is installed when the rule is accepted. |
-| `drivers/net/tap/tap_flow.c` | `tap_flow_validate`, `tap_flow_create` | Determines that L4 protocol match is required and enables the parser. |
+| File                                | Function                                                          | Role in the hot path                                                  |
+| ----------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------------------------- |
+| **`lib/net/rte_net.c`**             | `uint32_t rte_net_get_ptype(...)`                                 | Linear walk over L2/L3/L4 headers (≈ lines 560 – 850).                |
+| `lib/net/rte_ip.h`                  | `rte_ipv4_hdr_len(...)`                                           | Extracts IPv4 IHL on each IPv4 packet.                                |
+| `lib/net/rte_byteorder.h`           | `rte_constant_bswap16(...)`                                       | Endian swap used in every UDP/TCP port check.                         |
+| `lib/mbuf/rte_mbuf.c`               | `rte_pktmbuf_read(...)`                                           | Safely copies header bytes into cache.                                |
+| **`drivers/net/tap/rte_eth_tap.c`** | `tap_trigger_cb()` → `tap_parse_packet()` → `rte_net_get_ptype()` | TAP Rx path; the callback is installed when the rule is accepted.     |
+| `drivers/net/tap/tap_flow.c`        | `tap_flow_validate`, `tap_flow_create`                            | Determines that L4 protocol match is required and enables the parser. |
 
 > ▸ _In the opened object address `0x61abdac09a90` within the Symbol-Viewer (part of the *Call-graph Analysis* perspective) TraceCompass resolved the symbol name to **`rte_net_get_ptype`** in **`lib/net/rte_net.c`**, fully confirming the mapping in the table above._
 
@@ -203,25 +203,25 @@ Because the rule requires classification of every frame’s L3/L4 headers to dec
 ![Flame-Graph01](Flame-Graph01.png)
 
 
-| Rank | Dominant cost | Trace symptom | Source location |
-|------|---------------|---------------|-----------------|
-| 1    | **`rte_net_get_ptype()`** | 15 ms total / 7.8 ms self for 1 881 calls | `lib/net/rte_net.c:≈560-850` |
-| 2    | `rte_pktmbuf_read()` + `rte_pktmbuf_headroom` | 2.36 ms self | `lib/mbuf/rte_mbuf.c:≈500-580` |
-| 3    | `rte_constant_bswap16` | 2.45 ms self | `include/rte_byteorder.h` |
-| 4    | `rte_ipv4_hdr_len` | 0.76 ms self | `lib/net/rte_ip.h` |
-| 5    | Mempool get/put bursts | Visible spikes when mbuf cache empties | `lib/mempool/rte_mempool_generic.c` |
+| Rank | Dominant cost                                 | Trace symptom                             | Source location                     |
+| ---- | --------------------------------------------- | ----------------------------------------- | ----------------------------------- |
+| 1    | **`rte_net_get_ptype()`**                     | 15 ms total / 7.8 ms self for 1 881 calls | `lib/net/rte_net.c:≈560-850`        |
+| 2    | `rte_pktmbuf_read()` + `rte_pktmbuf_headroom` | 2.36 ms self                              | `lib/mbuf/rte_mbuf.c:≈500-580`      |
+| 3    | `rte_constant_bswap16`                        | 2.45 ms self                              | `include/rte_byteorder.h`           |
+| 4    | `rte_ipv4_hdr_len`                            | 0.76 ms self                              | `lib/net/rte_ip.h`                  |
+| 5    | Mempool get/put bursts                        | Visible spikes when mbuf cache empties    | `lib/mempool/rte_mempool_generic.c` |
 
 ---
 
 ## 5   Practical mitigation options
 
-| Mitigation | Applicable context | Implementation |
-|------------|-------------------|----------------|
-| Hardware off-load (`rte_flow` in NIC) | Physical NIC available | Intel E810, Mellanox CX-6, etc. |
-| Disable software PTYPE parsing | Remain on TAP | `port config 0 ptype_parse off`; filter in forwarding loop. |
-| Vectorised TAP Rx path | Willing to patch | Use AVX2/SSE sample in `drivers/net/ixgbe`. |
-| Remove `-finstrument-functions` | Performance runs | Replace with manual UST probes or `perf record`. |
-| Pre-slice traffic in generator | Synthetic workload | Send UDP frames to a dedicated TAP. |
+| Mitigation                            | Applicable context     | Implementation                                              |
+| ------------------------------------- | ---------------------- | ----------------------------------------------------------- |
+| Hardware off-load (`rte_flow` in NIC) | Physical NIC available | Intel E810, Mellanox CX-6, etc.                             |
+| Disable software PTYPE parsing        | Remain on TAP          | `port config 0 ptype_parse off`; filter in forwarding loop. |
+| Vectorised TAP Rx path                | Willing to patch       | Use AVX2/SSE sample in `drivers/net/ixgbe`.                 |
+| Remove `-finstrument-functions`       | Performance runs       | Replace with manual UST probes or `perf record`.            |
+| Pre-slice traffic in generator        | Synthetic workload     | Send UDP frames to a dedicated TAP.                         |
 
 > ▸ _The capture employed `--subbuf-size=40M`, yet some events were lost during the busiest 30 µs sections, indicating that instrumentation overhead itself is non-negligible._
 
@@ -242,25 +242,25 @@ drivers/net/tap/tap_flow.c    : software flow helpers
 
 # 2  Detailed observations for each TraceCompass component
 
-| TraceCompass view | Observation | Analytical implication |
-|-------------------|-------------|------------------------|
-| *Statistics → Event Types* | Entry/exit events are exactly 50 / 50 %. | Confirms high volume caused by `-finstrument-functions`; helper timing is inflated. |
-| *Event Density* | Saw-tooth pattern of ~44–50 events per burst; valleys align with mbuf allocations. | Indicates classification and occasional mempool refills dominate burst latency. |
-| *Flame Graph* | Wide `pkt_burst_io_forward`; underneath, repeating stack of six helpers. | Helper set is invoked once per frame, characteristic of software parsing. |
-| *Flame Graph tooltip* | `rte_net_get_ptype` mean ≈ 8 µs; max ≈ 54 µs. | Long tail reflects branch/cold-cache penalties. |
-| *Function Duration Statistics* | Helpers: `rte_pktmbuf_read` 422 ns, `rte_constant_bswap16` 391 ns, etc. | Figures match the ∼400 ns overhead introduced by the rule. |
-| *Weighted Tree Viewer* | Six helpers form ≈ 60 % of weighted time. | Parsing confirmed as the principal hotspot. |
-| *Call-graph Analysis* | Selected peaks consist exclusively of helper symbols; no system calls present. | Processing overhead lies entirely within userspace DPDK code. |
+| TraceCompass view              | Observation                                                                        | Analytical implication                                                              |
+| ------------------------------ | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| *Statistics → Event Types*     | Entry/exit events are exactly 50 / 50 %.                                           | Confirms high volume caused by `-finstrument-functions`; helper timing is inflated. |
+| *Event Density*                | Saw-tooth pattern of ~44–50 events per burst; valleys align with mbuf allocations. | Indicates classification and occasional mempool refills dominate burst latency.     |
+| *Flame Graph*                  | Wide `pkt_burst_io_forward`; underneath, repeating stack of six helpers.           | Helper set is invoked once per frame, characteristic of software parsing.           |
+| *Flame Graph tooltip*          | `rte_net_get_ptype` mean ≈ 8 µs; max ≈ 54 µs.                                      | Long tail reflects branch/cold-cache penalties.                                     |
+| *Function Duration Statistics* | Helpers: `rte_pktmbuf_read` 422 ns, `rte_constant_bswap16` 391 ns, etc.            | Figures match the ∼400 ns overhead introduced by the rule.                          |
+| *Weighted Tree Viewer*         | Six helpers form ≈ 60 % of weighted time.                                          | Parsing confirmed as the principal hotspot.                                         |
+| *Call-graph Analysis*          | Selected peaks consist exclusively of helper symbols; no system calls present.     | Processing overhead lies entirely within userspace DPDK code.                       |
 
 ---
 
 # 3 Adding PMU contexts
 
-| PMU counter | Projected change with the flow rule active | Explanation |
-|-------------|--------------------------------------------|-------------|
-| **cpu-cycles** | Increase by ~10 – 15 % | Additional helper instructions execute per frame. |
-| **instructions** | Increase by ~12 – 18 % | Header checks add 100 – 150 instructions per packet. |
-| **cache-misses** | Noticeable rise on the Rx core | `rte_pktmbuf_read` touches payload across cache-line boundaries, incurring extra L1 and occasional LLC misses. |
+| PMU counter      | Projected change with the flow rule active | Explanation                                                                                                    |
+| ---------------- | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| **cpu-cycles**   | Increase by ~10 – 15 %                     | Additional helper instructions execute per frame.                                                              |
+| **instructions** | Increase by ~12 – 18 %                     | Header checks add 100 – 150 instructions per packet.                                                           |
+| **cache-misses** | Noticeable rise on the Rx core             | `rte_pktmbuf_read` touches payload across cache-line boundaries, incurring extra L1 and occasional LLC misses. |
 
 *Predicted secondary effects*
 
@@ -268,4 +268,39 @@ drivers/net/tap/tap_flow.c    : software flow helpers
 * LLC-miss percentage rises modestly; most misses are served after the first line fill.  
 * The perf sample set should validate the time-domain analysis by showing higher retired instructions and cache-miss stalls exclusively on the userspace threads.
 
----
+
+## Test Scenario: Two Queues, Dropping TCP, UDP, or Both Packet Types
+
+In this test, we examine the effect of dropping specific types of packets.  
+First, we dropped UDP packets, then both TCP and UDP packets.
+
+We noticed that regardless of the flow rule, the `burst_forward` function is always called.  
+This is expected since the driver operates in poll mode — the CPU is always active, and the specified core maintains 100% utilization.
+
+![](Screenshot%20from%202025-06-03%2007-20-33-1.png)
+
+If there is data to transmit, the call stack changes to:
+
+![](Screenshot%20from%202025-06-03%2007-21-53-1.png)
+
+When analyzing the function calls, we observed no functions specifically dedicated to filtering or dropping.  
+This seems odd, so let’s dig deeper.
+
+**Note:** `LTTng` captures function calls, but it does not trace logic like `if` or `else` branches.
+
+Let’s inspect the DPDK source code.  
+In [`tap_flow.c`](https://github.com/DPDK/dpdk/blob/main/drivers/net/tap/tap_flow.c) (line 1065), if the flow action is set to drop, it modifies the data so the kernel drops the packet.  
+Therefore, no user-space function is invoked, and `LTTng` cannot trace it.
+
+![](Screenshot%20from%202025-06-03%2007-26-55-1.png)
+
+The same applies to queue redirection for specific packet types:
+
+![](Screenshot%20from%202025-06-03%2007-28-00-1.png)
+
+It simply edits the socket buffer (SKB), with no additional function call.
+
+### Conclusion
+
+Tracing the actual filtering logic via function calls is not possible with this setup.  
+However, we can still analyze low-level performance metrics such as cache misses or CPU cycles for further insights.
