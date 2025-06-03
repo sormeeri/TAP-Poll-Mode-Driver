@@ -183,6 +183,8 @@ Because the rule requires classification of every frame’s L3/L4 headers to dec
 
 ---
 
+![PMD_RX_Burst](PMD_RX_Burst.png)
+
 ## 3   Reasons for the high cost of the rule
 
 1. **TAP is a purely software device**; no hardware RSS or flow-director off-load is available.  
